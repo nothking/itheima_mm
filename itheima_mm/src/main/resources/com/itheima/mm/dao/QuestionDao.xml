@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--namespace: 名称空间，接口的全限定名-->
+<mapper namespace="com.itheima.mm.dao.QuestionDao">
+
+    <!--基础试题分页数据列表-->
+    <select id="findListByPage" resultType="Question">
+        SELECT
+        (select name from t_course where id = q.course_id) AS courseName,
+        create_date as createDate,
+        (SELECT username FROM t_user WHERE id = q.user_id) as creator,
+        difficulty as difficulty,
+        id as id,
+        id+1000 as number,
+        status as status,
+        subject as subject,
+        type as type,
+        (select count(*) from tr_member_question where question_id = q.id) as usedQty
+        from t_question as q
+        <include refid="sqlId"/>
+
+        LIMIT #{offset}, #{pageSize}
+    </select>
+    <!--基础试题分页总数目-->
+    <select id="CountQuestion" resultType="long">
+        select count(*) from t_question
+        <include refid="sqlId"/>
+    </select>
+
+    <!--获取自增主键值-->
+    <insert id="QuestionAdd" keyProperty="id" useGeneratedKeys="true">
+        INSERT INTO t_question (subject, type, difficulty, analysis,
+        analysis_video, remark, is_classic, review_status,
+        status, create_date, user_id, company_id, catalog_id,course_id)
+        VALUES (#{subject},#{type},#{difficulty},#{analysis},
+         #{analysisVideo}, #{remark}, #{isClassic}, #{reviewStatus},
+         #{status}, #{createDate}, #{userId}, #{companyId},
+         #{catalogId},#{courseId})
+    </insert>
+
+    <!--审核修改状态-->
+    <update id="updateStatus">
+        update t_question set status = #{status}, review_status = #{reviewStatus}
+            where id = #{id}
+    </update>
+
+    <!--基础试题分页公用的sql片段-->
+    <sql id="sqlId">
+        <where>
+            <if test="queryParams != null and queryParams.courseId != null and   queryParams.courseId != ''">
+                AND course_id = #{queryParams.courseId}
+            </if>
+            <if test="queryParams != null and queryParams.difficulty != null and   queryParams.difficulty != ''">
+                AND difficulty = #{queryParams.difficulty}
+            </if>
+            <if test="queryParams != null and queryParams.type != null and  queryParams.type != 0">
+                AND type = #{queryParams.type}
+            </if>
+            <if test="queryParams != null and queryParams.keyWord != null and queryParams.keyWord != ''">
+                AND subject like "%"#{queryParams.keyWord}"%"
+            </if>
+
+           <if test="queryParams != null and queryParams.reviewStatus != null and queryParams.reviewStatus = 0">
+                AND review_status = #{queryParams.reviewStatus}
+            </if>
+        </where>
+    </sql>
+</mapper>

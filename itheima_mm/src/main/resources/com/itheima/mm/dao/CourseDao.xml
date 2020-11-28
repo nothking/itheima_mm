@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--namespace: 名称空间，接口的全限定名-->
+<mapper namespace="com.itheima.mm.dao.CourseDao">
+
+    <!--抽象出来的公共的sql片段-->
+    <sql id="sqlId">
+        <where>
+            <if test="queryParams != null and queryParams.name != null and queryParams.name != ''">
+                AND name = #{queryParams.name}
+            </if>
+            <if test="queryParams != null and queryParams.status != null">
+                AND is_show = #{queryParams.status}
+            </if>
+        </where>
+    </sql>
+
+    <insert id="AddCourse" useGeneratedKeys="true">
+        insert into  t_course  (name, create_date, is_show, user_id)
+        VALUES (#{name},now(),#{isShow},#{userId})
+    </insert>
+
+    <select id="findListByPage" resultType="Course">
+        select
+        (SELECT COUNT(*) FROM t_catalog WHERE course_id = c.id) as catalogQty,
+        create_date as createDate,
+        (select username from t_user where id = c.user_id) as creator,
+        id as id,
+        is_show as isShow,
+        name as name,
+        (select count(*) from t_question where course_id = c.id) as questionQty,
+        (SELECT COUNT(*) FROM t_tag WHERE course_id = c.id) as tagQty
+        from t_course as c
+        <include refid="sqlId"/>
+        LIMIT #{offset}, #{pageSize}
+    </select>
+    <!--查询总个数-->
+    <select id="countTotal" resultType="long">
+        select count(*) from t_course
+        <include refid="sqlId"/>
+    </select>
+
+    <update id="CourseUpdate" useGeneratedKeys="true">
+        update t_course
+        <set>
+            <if test="name!=null" >
+                name = #{name},
+            </if>
+            <if test="isShow!=null" >
+                is_show = #{isShow}
+            </if>
+        </set>
+        where id=#{id}
+    </update>
+
+    <delete id="CourseDelete" >
+        delete from t_course where id=#{id}
+    </delete>
+
+
+    <select id="findAllCourse" resultType="Course">
+        select id, name from t_course where is_show = 0;
+    </select>
+    <!--新增试题-学科列表-->
+    <select id="findAll" resultMap="findAllMap">
+        select id, name from t_course
+    </select>
+    <resultMap id="findAllMap" type="Course">
+        <!--course自身属性-->
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+
+        <!--一对多关系catalogList、tagList-->
+        <!--一对多collection的嵌套查询-->
+        <!--
+            property : 一对多的属性名
+            ofType： 一对多属性集合的类型
+            column  ： 关联的字段
+            select： 名称空间的select的id属性值
+        -->
+        <collection property="catalogList" ofType="Catalog" column="id"
+                    select="com.itheima.mm.dao.CatalogDao.findByCourseId"/>
+
+        <collection property="tagList" ofType="Tag" column="id"
+                    select="com.itheima.mm.dao.TagDao.findByCourseId"/>
+    </resultMap>
+</mapper>

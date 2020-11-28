@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--namespace: 名称空间，接口的全限定名-->
+<mapper namespace="com.itheima.mm.dao.CompanyDao">
+    <!--新增试题-企业列表-->
+    <select id="findAll" resultMap="findAllMap">
+        SELECT id,
+        short_name AS shortName,
+        city_id AS cityId
+        FROM t_company
+    </select>
+    <resultMap id="findAllMap" type="Company">
+        <!--企业自身属性-->
+        <id column="id" property="id"/>
+        <result property="shortName" column="shortName"/>
+        <result property="cityId" column="cityId"/>
+
+        <!--配置多对多（一对多实现collection）
+            根据企业id去查询该企业的行业数据列表
+        -->
+        <collection property="industryList" ofType="Industry" column="id"
+                    select="com.itheima.mm.dao.IndustryDao.findByCompanyId"/>
+    </resultMap>
+</mapper>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--namespace: 名称空间，接口的全限定名-->
+ <mapper namespace="com.itheima.mm.dao.UserDao">
+    <select id="findAll" resultType="User">
+     select * from t_user;
+    </select>
+
+    <select id="findUserByUserName" resultType="User">
+        select * from t_user where username=#{username} and password=#{password};
+    </select>
+
+    <insert id="addUser" useGeneratedKeys="true" >
+        insert into t_user values (null,#{username},#{password},#{state},
+        #{email},#{source},#{createDate},#{remark});
+    </insert>
+</mapper>
+
